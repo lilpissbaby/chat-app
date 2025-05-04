@@ -22,6 +22,46 @@ document.addEventListener("DOMContentLoaded", () => {
     let typingTimeout = null
     let isTyping = false
   
+
+// Añade esto al inicio con las otras variables
+let greetingCooldown = false;
+
+// Función para obtener saludo aleatorio
+// Reemplaza la función existente getRandomGreeting con esta versión simplificada
+function getRandomGreeting() {
+  if (!currentUser) {
+      showToast("Primero establece tu nombre de usuario", "error");
+      return;
+  }
+
+  // Array de mensajes aleatorios
+  const randomGreetings = [
+      "¡Hola a todos! ¿Cómo están hoy?",
+      "¡Hey! ¡Qué tal el día!",
+      "¡Saludos cordiales para todos!"
+  ];
+
+  // Seleccionar un mensaje aleatorio
+  const randomMessage = randomGreetings[Math.floor(Math.random() * randomGreetings.length)];
+
+  // Enviar el mensaje al chat
+  socket.send(JSON.stringify({
+      type: "message",
+      channelId: currentChannelId,
+      text: randomMessage
+  }));
+
+  // Pequeña animación para el botón
+  const btn = document.getElementById("random-greeting-btn");
+  btn.classList.add("clicked");
+  setTimeout(() => {
+      btn.classList.remove("clicked");
+  }, 300);
+}
+
+// Añade este event listener con los otros
+document.getElementById("random-greeting-btn").addEventListener("click", getRandomGreeting);
+
     // Toggle sidebar on mobile
     toggleSidebarBtn.addEventListener("click", () => {
       sidebarCol.classList.add("show")
@@ -571,62 +611,57 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   
-    // Afegir missatges al xat
     function addMessageToChat(message) {
-      const messageDiv = document.createElement("div")
-      messageDiv.classList.add("message")
-      messageDiv.dataset.messageId = message.id
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message");
+      messageDiv.dataset.messageId = message.id;
   
-      const isCurrentUser = message.userId === currentUser?.id
-      const isPrivate = message.type === "private_message"
+      const isCurrentUser = message.userId === currentUser?.id;
+      const isAdmin = isAdminInCurrentChannel();
   
-      if (isPrivate) {
-        messageDiv.classList.add("private-message")
-      } else if (isCurrentUser) {
-        messageDiv.classList.add("user-message")
-      } else {
-        messageDiv.classList.add("other-message")
-      }
+      // Clases según tipo de mensaje
+      messageDiv.classList.add(isCurrentUser ? "user-message" : "other-message");
   
-      const timestamp = new Date(message.timestamp).toLocaleTimeString()
+      const timestamp = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
+      // Contenido del mensaje
       let messageContent = `
-              <div class="message-header">
-                  <span class="username">${message.username}</span>
-                  <span class="timestamp">${timestamp}</span>
+          <div class="message-header">
+              <span class="username">${message.username}</span>
+              <span class="timestamp">${timestamp}</span>
+          </div>
+          <div class="message-text">${message.text}</div>
+      `;
+  
+      // Solo mostrar botón si es admin o mensaje propio
+      if (isAdmin || isCurrentUser) {
+          messageContent += `
+              <div class="message-actions">
+                  <button class="delete-message-btn" data-message-id="${message.id}">
+                      <i class="fas fa-trash"></i> Eliminar
+                  </button>
               </div>
-              <div class="message-text">${message.text}</div>
-          `
-  
-      // Accions per a administradors
-      if (!isCurrentUser && !isPrivate && currentUser && isAdminInCurrentChannel()) {
-        messageContent += `
-                  <div class="message-actions">
-                      <button class="delete-message-btn" data-message-id="${message.id}">
-                          <i class="fas fa-trash"></i> Eliminar
-                      </button>
-                  </div>
-              `
+          `;
       }
   
-      messageDiv.innerHTML = messageContent
-      messagesContainer.appendChild(messageDiv)
+      messageDiv.innerHTML = messageContent;
+      messagesContainer.appendChild(messageDiv);
   
-      // Afegir event listener per al botó d'eliminar
-      const deleteBtn = messageDiv.querySelector(".delete-message-btn")
+      // Añadir evento de borrado
+      const deleteBtn = messageDiv.querySelector(".delete-message-btn");
       if (deleteBtn) {
-        deleteBtn.addEventListener("click", (e) => {
-          e.stopPropagation()
-          socket.send(
-            JSON.stringify({
-              type: "delete_message",
-              channelId: currentChannelId,
-              messageId: message.id,
-            }),
-          )
-        })
+          deleteBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (confirm("¿Eliminar este mensaje?")) {
+                  socket.send(JSON.stringify({
+                      type: "delete_message",
+                      channelId: currentChannelId,
+                      messageId: message.id
+                  }));
+              }
+          });
       }
-    }
+  }
   
     function addSystemMessage(text) {
       const messageDiv = document.createElement("div")
@@ -664,9 +699,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
     // Comprovar si l'usuari actual és administrador del canal actual
     function isAdminInCurrentChannel() {
-      // Aquesta informació s'obtindria del servidor en un cas real
-      // Per simplificar, ho deixem com a funció buida
-      return false
+        if (!currentUser) return false;
+        const userElement = document.querySelector(`#users-list li[data-user-id="${currentUser.id}"]`);
+        return userElement ? userElement.classList.contains('admin') : false;
     }
   
     // Desplaçar-se al final dels missatges

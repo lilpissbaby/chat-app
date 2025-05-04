@@ -353,13 +353,17 @@ function deleteMessage(ws, channelId, messageId) {
   const channel = channels.get(channelId);
   if (!channel) return;
   
-  // Comprovar que el sol·licitant és admin
+  // Comprovar que el sol·licitant és admin O el propietari del missatge
+  const message = channel.messages.find(m => m.id === messageId);
   if (!channel.admins.has(ws.id)) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'No tens permisos per fer això'
-    }));
-    return;
+    // Si no es admin, verificar si es el propietario del mensaje
+    if (!message || message.userId !== ws.id) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'No tens permisos per fer això'
+      }));
+      return;
+    }
   }
   
   const messageIndex = channel.messages.findIndex(m => m.id === messageId);
@@ -386,10 +390,9 @@ function sendChannelHistory(ws, channelId) {
       id: id,
       username: users.get(id)?.username || 'Desconegut'
     })),
-    admins: Array.from(channel.admins)
+    admins: Array.from(channel.admins) // Asegúrate de incluir esto
   }));
 }
-
 // Funcionalitat innovadora: missatges privats
 function sendPrivateMessage(ws, toUserId, messageText) {
   const fromUser = users.get(ws.id);

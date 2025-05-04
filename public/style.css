@@ -548,14 +548,12 @@
   }
   
   .message-actions {
-    margin-top: 8px;
-    font-size: 0.8rem;
     display: flex;
     justify-content: flex-end;
-    opacity: 0;
-    transition: opacity var(--transition-speed) ease;
-  }
-  
+    margin-top: 8px;
+    opacity: 1 !important; /* Visible permanentemente */
+    transition: none;
+}
   .message:hover .message-actions {
     opacity: 1;
   }
@@ -774,3 +772,97 @@
     }
   }
   
+  .delete-message-btn {
+    background: var(--danger-color) !important;
+    color: white !important;
+    border: none;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all var(--transition-speed) ease;
+    opacity: 0.8;
+}
+
+.delete-message-btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.delete-message-btn i {
+  font-size: 10px;
+}
+
+/* Mensajes de admin */
+#users-list li.admin::after {
+    content: " 👑";
+    font-size: 14px;
+}
+
+
+/* Botón de saludo aleatorio */
+.user-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  #random-greeting-btn {
+    background-color: var(--info-color);
+    width: 100%;
+  }
+  
+  /* Animación para el botón de saludo */
+#random-greeting-btn.clicked {
+  transform: scale(0.95);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  transition: all 0.3s ease;
+}
+
+.user-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+#random-greeting-btn {
+  background-color: var(--info-color);
+  color: white;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+#random-greeting-btn:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+#random-greeting-btn:active {
+  transform: translateY(0);
+}
+
+  /* Estilos específicos para mensajes del usuario */
+.message.user-message .delete-message-btn {
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.message.user-message .delete-message-btn:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Estilos específicos para mensajes de otros */
+.message.other-message .delete-message-btn {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger-color) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.message.other-message .delete-message-btn:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
